@@ -8,49 +8,49 @@ interface RoomUser {
   Room: Room;
 }
 
-async function getBookingByUserId(id: number): Promise<RoomUser> {
-  const room = await bookingRepository.findBookingById(id);
-  if (!room) throw notFoundError();
+async function createBooking(roomId: number, userId: number) {
+  if (!roomId) throw new Error('params in body of roomId isnt included');
 
-  return room;
-}
+  const tkt = await ticketRepository.findTicketByUserId(userId);
+  const RemoteTicket = tkt.TicketType.isRemote;
+  const notTicketPaid = tkt.status === 'RESERVED';
+  const noIncludesHotel = !tkt.TicketType.includesHotel;
 
-async function postBooking(roomId: number, userId: number) {
-  if (!roomId) throw new Error('Body param roomId is missing');
-
-  const ticket = await ticketRepository.findTicketByUserId(userId);
-  const isRemoteTicket = ticket.TicketType.isRemote;
-  const notPaidTicket = ticket.status === 'RESERVED';
-  const notIncludesHotel = !ticket.TicketType.includesHotel;
-
-  if (isRemoteTicket || notPaidTicket || notIncludesHotel) throw new Error();
+  if (RemoteTicket || notTicketPaid || noIncludesHotel) throw new Error();
 
   const room = await bookingRepository.findRoom(roomId);
   if (!room) throw notFoundError();
 
-  const noVacanciesInRoom = room.capacity === room.Booking.length;
-  if (noVacanciesInRoom) throw noVacanciesAvailableError();
+  const NoVacancy = room.capacity === room.Booking.length;
+  if (NoVacancy) throw noVacanciesAvailableError();
 
   const { id: bookingId } = await bookingRepository.createBooking(roomId, userId);
 
   return { bookingId };
 }
 
-async function putBooking(roomId: number, bookingId: number, userId: number) {
+async function takeBookingbyUserId(id: number): Promise<RoomUser> {
+  const takeRoom = await bookingRepository.findBookingById(id);
+  if (!takeRoom) throw notFoundError();
+
+  return takeRoom;
+}
+
+async function updateBooking(roomId: number, bookingId: number, userId: number) {
   if (!roomId) throw new Error('Body param roomId is missing');
 
-  const haveBooking = await bookingRepository.findBookingById(userId);
-  if (!haveBooking) throw noVacanciesAvailableError();
+  const existBooking = await bookingRepository.findBookingById(userId);
+  if (!existBooking) throw noVacanciesAvailableError();
 
   const room = await bookingRepository.findRoom(roomId);
   if (!room) throw notFoundError();
 
-  const isUserBooking = haveBooking.id === bookingId;
-  if (!isUserBooking) throw unauthorizedError();
+  const userBooking = existBooking.id === bookingId;
+  if (!userBooking) throw unauthorizedError();
 
 
-  const noVacanciesInRoom = room.capacity === room.Booking.length;
-  if (noVacanciesInRoom) throw noVacanciesAvailableError();
+  const NoVacancy = room.capacity === room.Booking.length;
+  if (NoVacancy) throw noVacanciesAvailableError();
 
   const { id: newBookingId } = await bookingRepository.putBooking(bookingId, roomId);
 
@@ -58,9 +58,9 @@ async function putBooking(roomId: number, bookingId: number, userId: number) {
 }
 
 const bookingService = {
-  getBookingByUserId,
-  postBooking,
-  putBooking,
+  takeBookingbyUserId,
+  createBooking,
+  updateBooking,
 };
 
 export default bookingService;

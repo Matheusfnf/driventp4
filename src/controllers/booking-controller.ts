@@ -4,14 +4,14 @@ import { AuthenticatedRequest } from '@/middlewares';
 import { Response } from 'express';
 
 
-export async function postBooking(req: AuthenticatedRequest, res: Response) {
+export async function createBooking(req: AuthenticatedRequest, res: Response) {
   const {
     userId,
     body: { roomId },
   } = req;
 
   try {
-    const CreatedBookingId = await bookingService.postBooking(+roomId, +userId);
+    const CreatedBookingId = await bookingService.createBooking(+roomId, +userId);
     return res.status(httpStatus.OK).send(CreatedBookingId);
   } catch (error) {
     if (error.name === 'NotFoundError') {
@@ -24,12 +24,12 @@ export async function postBooking(req: AuthenticatedRequest, res: Response) {
   }
 }
 
-export async function getBooking(req: AuthenticatedRequest, res: Response) {
+export async function takeBooking(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
 
   try {
-    const getbooking = await bookingService.getBookingByUserId(+userId);
-    return res.status(httpStatus.OK).send(getbooking);
+    const takebooking = await bookingService.takeBookingbyUserId(+userId);
+    return res.status(httpStatus.OK).send(takebooking);
   } catch (error) {
     if (error.name === 'NotFoundError') {
       return res.sendStatus(httpStatus.NOT_FOUND);
@@ -40,7 +40,7 @@ export async function getBooking(req: AuthenticatedRequest, res: Response) {
 
 
 
-export async function putBooking(req: AuthenticatedRequest, res: Response) {
+export async function updateBooking(req: AuthenticatedRequest, res: Response) {
   const {
     userId,
     body: { roomId },
@@ -48,7 +48,7 @@ export async function putBooking(req: AuthenticatedRequest, res: Response) {
   } = req;
 
   try {
-    const UpdatedBookingId = await bookingService.putBooking(+roomId, +bookingId, +userId);
+    const UpdatedBookingId = await bookingService.updateBooking(+roomId, +bookingId, +userId);
     return res.status(httpStatus.OK).send(UpdatedBookingId);
   } catch (error) {
    if (error.name === 'UnauthorizedError') {
